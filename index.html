@@ -65,9 +65,6 @@ h1 em { font-style: italic; }
 .sw.life { background: #3b4a5c; }
 .sw.life::after { content: ""; position: absolute; left: 3px; top: -3px; width: 5px; height: 14px; background: var(--ribbon); clip-path: polygon(0 0,100% 0,100% 100%,50% 78%,0 100%); }
 .sw.re { display: grid; place-items: center; font-size: 9px; color: #fff; font-weight: 700; }
-.source { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
-.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
-.dot.live { background: #3f9b5a; box-shadow: 0 0 0 3px color-mix(in srgb, #3f9b5a 25%, transparent); }
 
 /* Toolbar */
 .toolbar {
@@ -208,7 +205,6 @@ dialog::backdrop { background: rgb(10 12 10 / .55); backdrop-filter: blur(3px); 
 .links a { color: var(--ink); }
 .close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font-size: 22px; cursor: pointer; }
 .close:hover { background: var(--line); }
-footer { color: var(--muted); font-size: 13px; text-align: center; }
 
 @media (max-width: 620px) {
   :root { --row: 150px; }
@@ -232,7 +228,6 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       <span><i class="sw life"></i>Life changing</span>
       <span><i class="sw fav"></i>Favorite</span>
       <span><i class="sw re">2×</i>Re-read</span>
-      <span class="source" id="source"><i class="dot"></i>Loading…</span>
     </div>
   </header>
 
@@ -248,8 +243,8 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
       <button class="chip" data-f="life" aria-pressed="false" type="button">Life changing</button>
     </div>
     <div class="seg" id="mode" role="group" aria-label="Show books as">
-      <button type="button" data-m="spines" aria-pressed="true">Spines</button>
-      <button type="button" data-m="covers" aria-pressed="false">Covers</button>
+      <button type="button" data-m="covers" aria-pressed="true">Covers</button>
+      <button type="button" data-m="spines" aria-pressed="false">Spines</button>
     </div>
     <select id="group" aria-label="Arrange shelves by">
       <option value="year">Shelve by year</option>
@@ -261,7 +256,6 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   </div>
 
   <main id="library" aria-live="polite"></main>
-  <footer id="foot"></footer>
 </div>
 
 <dialog id="detail" aria-labelledby="d-title"></dialog>
@@ -287,8 +281,8 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   const lastName = a => { const first = a.split(",")[0].trim(); const p = first.split(/\s+/); return p[p.length - 1] || first; };
 
   let books = [];
-  const state = { q: "", f: new Set(), group: "year", mode: "spines" };
-  try { state.group = localStorage.getItem("shelf-group") || state.group; state.mode = localStorage.getItem("shelf-mode") || state.mode; } catch (e) {}
+  const state = { q: "", f: new Set(), group: "year", mode: "covers" };
+  try { state.group = localStorage.getItem("shelf-group") || state.group; state.mode = localStorage.getItem("shelf-view") || state.mode; } catch (e) {}
   $("#group").value = state.group;
   const setModeButtons = () => document.querySelectorAll("#mode button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.m === state.mode)));
   setModeButtons();
@@ -477,8 +471,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
     const topA = Object.entries(authors).sort((a, b) => b[1] - a[1])[0];
     const fic = books.filter(b => b.type === "F").length;
     $("#stats").innerHTML = `<span><b>${books.length}</b> books read</span><span><b>${ys.length}</b> years on the shelf</span><span>Biggest year <b>${best}</b> (${years[best]})</span><span>Most read <b>${esc(topA[0])}</b> (${topA[1]})</span><span><b>${Math.round(fic / books.length * 100)}%</b> fiction</span>`;
-    $("#source").innerHTML = live ? `<i class="dot live"></i>Live from Google Sheets` : `<i class="dot"></i>Snapshot from ${SNAPSHOT_DATE}`;
-    $("#foot").textContent = live ? "Shelves update when the Google Sheet changes." : "Showing the saved copy of the sheet. The live sheet loads when this page is hosted on krouss.org.";
+    document.documentElement.dataset.source = live ? "live" : "snapshot";
   }
 
   // Book detail
@@ -536,7 +529,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
 
   // Controls
   $("#library").addEventListener("click", e => {
-    const s = e.target.closest(".spine"); if (s) return open(+s.dataset.id);
+    const s = e.target.closest(".spine, .face"); if (s) return open(+s.dataset.id);
     if (e.target.closest("#reset")) { state.q = ""; $("#q").value = ""; state.f.clear(); document.querySelectorAll(".chip[data-f]").forEach(c => c.setAttribute("aria-pressed", "false")); render(); }
   });
   $("#q").addEventListener("input", e => { state.q = e.target.value.trim(); render(); });
@@ -547,7 +540,7 @@ footer { color: var(--muted); font-size: 13px; text-align: center; }
   });
   $("#mode").addEventListener("click", e => {
     const m = e.target.closest("button"); if (!m || m.dataset.m === state.mode) return;
-    state.mode = m.dataset.m; setModeButtons(); try { localStorage.setItem("shelf-mode", state.mode); } catch (err) {} render();
+    state.mode = m.dataset.m; setModeButtons(); try { localStorage.setItem("shelf-view", state.mode); } catch (err) {} render();
   });
   $("#group").addEventListener("change", e => { state.group = e.target.value; try { localStorage.setItem("shelf-group", state.group); } catch (err) {} render(); });
   $("#random").addEventListener("click", () => {
