@@ -1,0 +1,578 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Jared's Bookshelf</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="description" content="Every book Jared Krouss has read since 2014, shelved by year.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,500;0,6..96,700;1,6..96,500&family=Archivo+Narrow:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap">
+<style>
+/* Layout: a library wall. One wooden shelf per year read, newest on top; spines are clickable books. */
+:root {
+  --wall: #dde1d7;
+  --recess: #c8cdc1;
+  --ink: #1d221e;
+  --muted: #5a645b;
+  --line: #b6bcaf;
+  --panel: #f4f5f0;
+  --wood-top: #d8ab74;
+  --wood: #b5844f;
+  --wood-dark: #7a5430;
+  --gold: #b0841f;
+  --ribbon: #9e1f22;
+  --focus: #1f5fbf;
+  --f-display: "Bodoni Moda", "Didot", "Times New Roman", serif;
+  --f-ui: "Archivo Narrow", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+  --f-body: "Newsreader", Georgia, "Times New Roman", serif;
+  --row: 164px;
+  --plank: 16px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --wall: #131714; --recess: #0b0e0c; --ink: #e9e6da; --muted: #9ba293; --line: #2e3530;
+    --panel: #1c211d; --wood-top: #7d5532; --wood: #5b3b21; --wood-dark: #2b1a0d;
+    --gold: #d8b25c; --ribbon: #c4383a; --focus: #8ab4ff; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --wall: #131714; --recess: #0b0e0c; --ink: #e9e6da; --muted: #9ba293; --line: #2e3530;
+  --panel: #1c211d; --wood-top: #7d5532; --wood: #5b3b21; --wood-dark: #2b1a0d;
+  --gold: #d8b25c; --ribbon: #c4383a; --focus: #8ab4ff; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--wall); color: var(--ink); font-family: var(--f-ui);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 1240px; margin: 0 auto; padding-block: 40px 64px; display: grid; gap: 28px; }
+
+/* Header */
+header { display: grid; gap: 14px; }
+.eyebrow { font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+h1 { font-family: var(--f-display); font-weight: 500; font-size: clamp(40px, 7vw, 76px); line-height: .95; margin: 0; text-wrap: balance; letter-spacing: -.01em; }
+h1 em { font-style: italic; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 28px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stats b { color: var(--ink); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 22px; font-size: 14px; color: var(--muted); align-items: center; }
+.legend span { display: inline-flex; gap: 8px; align-items: center; }
+.sw { width: 12px; height: 26px; border-radius: 2px; background: #3b4a5c; position: relative; flex: none; }
+.sw.fav::before, .sw.fav::after { content: ""; position: absolute; left: 0; right: 0; height: 2px; background: var(--gold); }
+.sw.fav::before { top: 4px; } .sw.fav::after { bottom: 4px; }
+.sw.life { background: #3b4a5c; }
+.sw.life::after { content: ""; position: absolute; left: 3px; top: -3px; width: 5px; height: 14px; background: var(--ribbon); clip-path: polygon(0 0,100% 0,100% 100%,50% 78%,0 100%); }
+.sw.re { display: grid; place-items: center; font-size: 9px; color: #fff; font-weight: 700; }
+.source { font-size: 13px; color: var(--muted); display: inline-flex; align-items: center; gap: 8px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.live { background: #3f9b5a; box-shadow: 0 0 0 3px color-mix(in srgb, #3f9b5a 25%, transparent); }
+
+/* Toolbar */
+.toolbar {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--wall) 92%, transparent); backdrop-filter: blur(8px);
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-block: 12px;
+  border-bottom: 1px solid var(--line);
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--wall); }
+.search { flex: 1 1 240px; min-width: 0; position: relative; }
+.search input {
+  width: 100%; font: 500 16px var(--f-ui); color: var(--ink); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px 10px 36px;
+}
+.search svg { position: absolute; left: 11px; top: 50%; translate: 0 -50%; width: 16px; height: 16px; stroke: var(--muted); fill: none; stroke-width: 2; }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip, .btn, select {
+  font: 600 14px var(--f-ui); color: var(--ink); background: transparent; border: 1px solid var(--line);
+  border-radius: 999px; padding: 8px 14px; cursor: pointer; letter-spacing: .02em;
+}
+select { border-radius: 6px; background: var(--panel); }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--wall); border-color: var(--ink); }
+.btn { background: var(--wood); color: #fff8ec; border-color: var(--wood-dark); border-radius: 6px; }
+.btn:hover { filter: brightness(1.08); }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.count { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; margin-left: auto; }
+
+/* Shelves */
+#library { display: grid; gap: 34px; }
+.case { display: grid; gap: 0; }
+.plaque { display: flex; align-items: baseline; gap: 12px; padding: 0 4px 8px; }
+.plaque h2 { font-family: var(--f-display); font-weight: 500; font-size: 30px; margin: 0; font-variant-numeric: lining-nums; }
+.plaque small { font-size: 14px; color: var(--muted); letter-spacing: .04em; }
+.plaque .bar { flex: 1; height: 1px; background: var(--line); align-self: center; }
+.shelf {
+  display: flex; flex-wrap: wrap; align-items: flex-end; row-gap: var(--plank); column-gap: 0;
+  padding: 0 10px var(--plank); border-radius: 3px;
+  background:
+    repeating-linear-gradient(to bottom,
+      transparent 0 var(--row),
+      var(--wood-top) var(--row) calc(var(--row) + 3px),
+      var(--wood) calc(var(--row) + 3px) calc(var(--row) + var(--plank) - 2px),
+      var(--wood-dark) calc(var(--row) + var(--plank) - 2px) calc(var(--row) + var(--plank))),
+    linear-gradient(to bottom, color-mix(in srgb, var(--recess) 80%, #000 20%), var(--recess) 30px);
+  background-size: 100% calc(var(--row) + var(--plank)), 100% calc(var(--row) + var(--plank));
+  box-shadow: inset 8px 0 0 var(--wood), inset -8px 0 0 var(--wood);
+}
+.slot { height: var(--row); display: flex; align-items: flex-end; padding-top: 10px; }
+.spine {
+  --c: #3b4a5c; --t: #f3ead8; --h: 140px; --w: 28px;
+  position: relative; width: var(--w); height: var(--h); border: 0; padding: 12px 0 10px; margin: 0 1px 0 0;
+  background:
+    linear-gradient(to right, rgb(0 0 0 / .28), rgb(255 255 255 / .10) 22%, rgb(255 255 255 / .02) 45%, rgb(0 0 0 / .08) 75%, rgb(0 0 0 / .32)),
+    var(--c);
+  color: var(--t); cursor: pointer; border-radius: 2px 2px 1px 1px;
+  writing-mode: vertical-rl; display: flex; align-items: center; gap: 8px;
+  font: 600 11px/1 var(--f-ui); letter-spacing: .06em; text-transform: uppercase;
+  transition: translate .18s ease, box-shadow .18s ease;
+  box-shadow: 0 1px 0 rgb(0 0 0 / .25);
+}
+.spine.lean { rotate: -4deg; transform-origin: bottom left; margin-left: 8px; }
+.spine:hover, .spine:focus-visible { translate: 0 -10px; box-shadow: 0 10px 14px -8px rgb(0 0 0 / .5); z-index: 2; }
+.spine .t { flex: 1 1 auto; min-height: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spine .a { flex: none; font-weight: 500; opacity: .8; font-size: 9.5px; max-height: 40%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.spine.fic { font: italic 500 12.5px/1 var(--f-display); text-transform: none; letter-spacing: .01em; }
+.spine.fic .a { font: 500 9.5px/1 var(--f-ui); text-transform: uppercase; letter-spacing: .06em; }
+.spine.wide { font-size: 12.5px; }
+.spine.wide.fic { font-size: 14px; }
+.spine .band { position: absolute; left: 0; right: 0; height: 2px; background: rgb(255 255 255 / .22); }
+.spine .band.b1 { top: 5px; } .spine .band.b2 { bottom: 5px; }
+.spine.fav .band { background: var(--gold); height: 3px; box-shadow: 0 0 0 .5px rgb(0 0 0 / .2); }
+.spine.fav .band.b1 { top: 4px; } .spine.fav .band.b2 { bottom: 4px; }
+.spine .ribbon { position: absolute; top: -4px; left: 22%; width: 6px; height: 22px; background: var(--ribbon); clip-path: polygon(0 0,100% 0,100% 100%,50% 82%,0 100%); }
+.spine .re { position: absolute; bottom: 12px; left: 50%; translate: -50% 0; writing-mode: horizontal-tb; font: 700 8px/1 var(--f-ui); background: var(--t); color: var(--c); border-radius: 6px; padding: 2px 3px; }
+.spine.has-re { padding-bottom: 26px; }
+/* Face-out books: real covers standing on the shelf */
+.face {
+  --c: #3b4a5c; --t: #f3ead8; --fh: 128px;
+  position: relative; height: var(--fh); aspect-ratio: 2 / 3; margin: 0 7px; padding: 0; border: 0; cursor: pointer;
+  border-radius: 1px 3px 3px 1px; overflow: hidden; background: var(--c); color: var(--t);
+  box-shadow: 3px 4px 8px -2px rgb(0 0 0 / .45), inset 3px 0 0 rgb(0 0 0 / .18);
+  transition: translate .18s ease, box-shadow .18s ease;
+}
+.face:hover, .face:focus-visible { translate: 0 -8px; box-shadow: 4px 14px 16px -8px rgb(0 0 0 / .55); z-index: 2; }
+.face .gen { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 8px 8px 11px; text-align: left; }
+.face .gen b { font: 500 12px/1.12 var(--f-display); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 6; -webkit-box-orient: vertical; overflow-wrap: anywhere; }
+.face .gen i { font: 600 8px/1.2 var(--f-ui); font-style: normal; letter-spacing: .12em; text-transform: uppercase; opacity: .85; }
+.face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+.face::after { content: ""; position: absolute; inset: 0; background: linear-gradient(to right, rgb(0 0 0 / .22), rgb(255 255 255 / .12) 4%, transparent 9%); pointer-events: none; }
+.face .ribbon { position: absolute; top: -3px; right: 12%; width: 9px; height: 30px; z-index: 1; background: var(--ribbon); clip-path: polygon(0 0,100% 0,100% 100%,50% 82%,0 100%); }
+.face.fav:not(.life) .ribbon { background: var(--gold); }
+.face .re { position: absolute; bottom: 6px; right: 6px; z-index: 1; font: 700 9px/1 var(--f-ui); background: rgb(0 0 0 / .65); color: #fff; border-radius: 6px; padding: 3px 4px; }
+.covers .face { --fh: 140px; margin: 0 5px; }
+.bookend { width: 10px; height: 96px; margin: 0 8px 0 4px; background: linear-gradient(to right, var(--wood-top), var(--wood) 40%, var(--wood-dark)); border-radius: 2px 2px 0 0; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.seg button { font: 600 14px var(--f-ui); color: var(--ink); background: var(--panel); border: 0; padding: 9px 14px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--wall); }
+.empty { padding: 40px 0; text-align: center; color: var(--muted); font-size: 16px; }
+.empty button { margin-top: 12px; }
+
+/* Book detail */
+dialog {
+  border: 0; padding: 0; border-radius: 10px; background: var(--panel); color: var(--ink);
+  width: min(720px, calc(100vw - 32px)); max-height: calc(100dvh - 48px);
+  box-shadow: 0 30px 80px -20px rgb(0 0 0 / .55);
+}
+dialog::backdrop { background: rgb(10 12 10 / .55); backdrop-filter: blur(3px); }
+.book { display: grid; grid-template-columns: 200px 1fr; gap: 28px; padding: 28px; }
+.jacket {
+  --c: #3b4a5c; --t: #f3ead8; aspect-ratio: 2 / 3; max-width: 100%; border-radius: 3px 6px 6px 3px; overflow: hidden; position: relative;
+  background: linear-gradient(to right, rgb(0 0 0 / .3), rgb(255 255 255 / .08) 6%, transparent 12%), var(--c); color: var(--t);
+  display: flex; flex-direction: column; justify-content: space-between; padding: 22px 16px 18px 22px;
+  box-shadow: 0 16px 30px -12px rgb(0 0 0 / .5);
+}
+.jacket .jt { font: 500 21px/1.1 var(--f-display); text-wrap: balance; overflow-wrap: anywhere; }
+.jacket .ja { font: 600 11px/1.2 var(--f-ui); letter-spacing: .14em; text-transform: uppercase; opacity: .85; }
+.jacket .rule { height: 1px; background: currentColor; opacity: .4; margin: 10px 0; }
+.jacket img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s; }
+.jacket img.ok { opacity: 1; }
+.info { display: grid; gap: 14px; align-content: start; min-width: 0; }
+.info h3 { font: 500 30px/1.08 var(--f-display); margin: 0; text-wrap: balance; }
+.info .sub { font: italic 400 18px/1.35 var(--f-body); color: var(--muted); margin: -6px 0 0; text-wrap: pretty; }
+.info .by { font: 400 18px var(--f-body); margin: 0; }
+.info .by button { font: inherit; color: inherit; background: none; border: 0; padding: 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 6px 18px; margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
+.facts dt { color: var(--muted); text-transform: uppercase; letter-spacing: .1em; font-size: 12px; padding-top: 2px; }
+.facts dd { margin: 0; }
+.tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.tag { font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; border-radius: 999px; padding: 4px 10px; border: 1px solid currentColor; }
+.tag.fav { color: var(--gold); } .tag.life { color: var(--ribbon); } .tag.re { color: var(--muted); }
+.more h4 { margin: 4px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .12em; color: var(--muted); }
+.more ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.more li button { font: 400 15px/1.3 var(--f-body); color: var(--ink); background: none; border: 0; padding: 0; text-align: left; cursor: pointer; }
+.more li button:hover { text-decoration: underline; }
+.more li span { color: var(--muted); font: 13px var(--f-ui); margin-left: 6px; }
+.links { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; }
+.links a { color: var(--ink); }
+.close { position: absolute; top: 10px; right: 10px; width: 36px; height: 36px; border-radius: 50%; border: 0; background: transparent; color: var(--muted); font-size: 22px; cursor: pointer; }
+.close:hover { background: var(--line); }
+footer { color: var(--muted); font-size: 13px; text-align: center; }
+
+@media (max-width: 620px) {
+  :root { --row: 150px; }
+  .wrap { padding-block: 24px 48px; }
+  .book { grid-template-columns: 1fr; padding: 22px; gap: 20px; }
+  .jacket { width: 150px; justify-self: center; }
+  .info h3 { font-size: 25px; }
+  .count { margin-left: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .spine { transition: none; } .jacket img { transition: none; } }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Krouss Library · Est. 2014</div>
+    <h1>Jared's <em>Bookshelf</em></h1>
+    <div class="stats" id="stats"></div>
+    <div class="legend">
+      <span><i class="sw life"></i>Life changing</span>
+      <span><i class="sw fav"></i>Favorite</span>
+      <span><i class="sw re">2×</i>Re-read</span>
+      <span class="source" id="source"><i class="dot"></i>Loading…</span>
+    </div>
+  </header>
+
+  <div class="toolbar" role="search">
+    <label class="search">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m20 20-3.5-3.5"></path></svg>
+      <input id="q" type="search" placeholder="Search titles or authors" aria-label="Search titles or authors" autocomplete="off">
+    </label>
+    <div class="chips" id="chips">
+      <button class="chip" data-f="F" aria-pressed="false" type="button">Fiction</button>
+      <button class="chip" data-f="N" aria-pressed="false" type="button">Nonfiction</button>
+      <button class="chip" data-f="fav" aria-pressed="false" type="button">Favorites</button>
+      <button class="chip" data-f="life" aria-pressed="false" type="button">Life changing</button>
+    </div>
+    <div class="seg" id="mode" role="group" aria-label="Show books as">
+      <button type="button" data-m="spines" aria-pressed="true">Spines</button>
+      <button type="button" data-m="covers" aria-pressed="false">Covers</button>
+    </div>
+    <select id="group" aria-label="Arrange shelves by">
+      <option value="year">Shelve by year</option>
+      <option value="author">Shelve by author</option>
+      <option value="title">Shelve by title</option>
+    </select>
+    <button class="btn" id="random" type="button">Pull a random book</button>
+    <span class="count" id="count"></span>
+  </div>
+
+  <main id="library" aria-live="polite"></main>
+  <footer id="foot"></footer>
+</div>
+
+<dialog id="detail" aria-labelledby="d-title"></dialog>
+
+<script type="application/json" id="snapshot">[["10% Happier: How I Tamed the Voice in My Head, Reduced Stress Without Losing My Edge, and Found Self-Help That Actually Works","Dan Harris",2022,"N",""],["1929: Inside the Greatest Crash in Wall Street History—and How It Shattered a Nation","Andrew Ross Sorkin",2025,"N",""],["21 Lessons for the 21st Century","Yuval Noah Harari",2018,"N",""],["3 Shade of Blue: Miles Davis, John Coltrane, Bill Evans, and the Lost Empire of Cool","James Kaplan",2026,"N",""],["7 Powers: The Foundations of Business Strategy","Hamilton Helmer",2018,"N",""],["8 Letters or Less: Write Like a Pro at Work (or Anywhere)","Fritz Holznagel",2025,"N",""],["A Certain Idea of France: The Life of Charles de Gaulle","Julian Jackson",2022,"N",""],["A Colony in a Nation","Chris Hayes",2017,"N",""],["A Gentleman in Moscow","Amor Towles",2020,"F",""],["A Guide to the Good Life: The Ancient Art of Stoic Joy","William Irvine",2019,"N",""],["A New World Begins: The History of the French Revolution","Jeremy Popkin",2024,"N",""],["A Problem From Hell: America and the Age of Genocide","Samantha Power",2019,"N","F"],["A Promised Land","Barack Obama",2020,"N",""],["A Rage for Order: The Middle East in Turmoil, from Tahrir Square to ISIS","Robert Worth",2018,"N",""],["A Season on the Brink: A Year with Bob Knight and the Indiana Hoosiers","John Feinstein",2025,"N",""],["A Spy Among Friends: Kim Philby and the Great Betrayal","Ben MacIntyre",2024,"N",""],["A Supposedly Fun Thing I'll Never Do Again: Essays and Arguments","David Foster Wallace",2019,"N",""],["A Truck Full of Money: Coding, Mania, Love, Genius - The Life of an American Entrepreneur","Tracy Kidder",2024,"N",""],["A Year in Provence","Peter Mayle",2023,"N",""],["Adventures in the Screen Trade","William Goldman",2025,"N",""],["After Steve: How Apple Became a Trillion Dollar Company and Lost Its Soul","Tripp Mickle",2022,"N",""],["Against the Tide: Rickover's Leadership Principles and the Rise of the Nuclear Navy","Dave Olider",2023,"N",""],["Ali: A Life","Jonathan Eig",2018,"N",""],["All About Me!: My Remarkable Life in Show Business","Mel Brooks",2022,"N",""],["All In: The Education of General David Petraeus","Paula Broadwell",2023,"N",""],["All My Friends are Going to be Strangers","Larry McMurtry",2023,"F",""],["All the Pieces Matter: The Inside Story of The Wire®","Jonathan Abrams",2018,"N",""],["All The President's Men","Carl Bernstein, Bob Woodward",2017,"N",""],["All the Shah's Men: An American Coup and the Roots of Middle East Terror","Stephen Kinzer",2020,"N",""],["Although of Course You End Up Becoming Yourself: A Road Trip with David Foster Wallace","David Lipsky",2020,"N",""],["Am I Being Too Suble: Straight Talk from a Business Rebel","Sam Zell",2025,"N",""],["Amazon Unbound: Jeff Bezos and the Invention of a Global Empire","Brad Stone",2021,"N",""],["American Caesar: Douglas MacArthur 1880 - 1964","William Manchester",2023,"N",""],["American Icon: Alan Mulally and the Fight to Save Ford Motor Company","Bryce G. Hoffman",2024,"N",""],["American Moonshot: John F. Kennedy and the Great Space Race","Douglas Brinkley",2023,"N",""],["American Prometheus: The Triumph and Tragedy of J. Robert Oppenheimer","Kai Bird, Martin J. Sherwin",2023,"N",""],["American Rascal: How Jay Gould Built Wall Street's Biggest Fortune","Greg Steinmetz",2022,"N",""],["American Tabloid","James Ellroy",2024,"F",""],["Amp It Up: Leading for Hypergrowth by Raising Expectations, Increasing Urgency, and Elevating Intensity","Frank Slootman",2025,"N","F"],["Amp It Up: Leading for Hypergrowth by Raising Expectations, Increasing Urgency, and Elevating Intensity","Frank Slootman",2022,"N","F"],["An American Sickness: How Healthcare Became Big Business and How You Can Take It Back","Elisabeth Rosenthal",2018,"N",""],["An Anecdotal Life","Carl Reiner",2025,"N",""],["Answers in the Form of Questions: A Definitive History and Insider's Guide to Jeopardy!","Claire McNear",2021,"N",""],["Arnold: The Education of a Bodybuilder","Arnold Schwarzenegger",2023,"N",""],["Astroball: The New Way to Win It All","Ben Reiter",2019,"N",""],["Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones","James Clear",2019,"N","F"],["Atomic Habits: An Easy & Proven Way to Build Good Habits & Break Bad Ones","James Clear",2025,"N","F"],["Audacity: How Barack Obama Defied His Critics and Created a Legacy That Will Prevail","Jonathan Chait",2017,"N",""],["Avid Reader: A Life","Robert Gottlieb",2023,"N",""],["Barbarians at the Gate: The Fall of RJR Nabisco","Bryan Burroughs, John Heylar",2019,"N",""],["Barça: The Making of the Greatest Team in the World","Graham Hunter",2023,"N",""],["Becoming","Michelle Obama",2018,"N",""],["Before the Storm: Barry Goldwater and the Unmaking of the American Consensus","Rick Perlstein",2020,"N",""],["Being Mortal: Medicine and What Matters in the End","Atul Gawande",2018,"N",""],["Being Nixon: A Man Divided","Evan Thomas",2015,"N",""],["Believer: My Forty Years in Politics","David Axelrod",2016,"N",""],["Between the World and Me","Ta-Nehisi Coates",2017,"N","L"],["Bird by Bird: Some Instructions on Writing and Life","Anne Lamont",2025,"N",""],["Black Box Thinking: Why Most People Never Learn from Their Mistakes - But Some Do","Mathew Syed",2020,"N",""],["Black Earth: The Holocaust as History and Warning","Timothy Snyder",2022,"N",""],["Black Flags: The Rise of ISIS","Joby Warrick",2019,"N",""],["Bloodlands: Europe Between Hitler and Stalin","Timothy Snyder",2022,"N",""],["Boom Town: The Fantastical Saga of Oklahoma City, its Chaotic Founding... its Purloined Basketball Team, and the Dream of Becoming a World-class Metropolis","Sam Anderson",2019,"N",""],["Born to Be Wired","John Malone",2025,"N",""],["Bottle of Lies: The Inside Story of the Generic Drug Boom","Katherine Eban",2021,"N",""],["Boys Among Men: How the Prep-to-Pro Generation Redefined the NBA and Sparked a Basketball Revolution","Jonathan Abrams",2017,"N",""],["Breakneck: China's Quest to Engineer the Future","Dan Wang",2025,"N",""],["Bright Lights, Big City","Jay McInerney",2026,"F",""],["Bringing Up Bébé: One American Mother Discovers the Wisdom of French Parenting","Pamela Druckerman",2020,"N",""],["Buckley: The Life and the Revolution That Changed America","Sam Tanenhaus",2025,"N",""],["Building a Second Brain: A Proven Method to Organize Your Digital Life and Unlock Your Creative Potential","Tiago Forte",2022,"N",""],["Built from Scratch: How a Couple of Regular Guys Grew The Home Depot from Nothing to $30 Billion","Arthur Blank, Bernie Marcus",2025,"N",""],["Business Adventures: Twelve Classic Tales from the World of Wall Street","John Brooks",2021,"N",""],["But Seriously","John McEnroe",2025,"N",""],["Cable Cowboy: John Malone and the Rise of the Modern Cable Business","Marc Robichaux",2021,"N",""],["Call Me By Your Name","Andre Aciman",2018,"F",""],["Caste: The Origins of Our Discontents","Isabel Wilkerson",2020,"N",""],["Catastrophic Care: How American Health Care Killed My Father--and How We Can Fix It","David Goldhill",2017,"N",""],["Catch and Kill: Lies, Spies, and a Conspiracy to Protect Predators","Ronan Farrow",2019,"N",""],["Challenger: A True Story of Heroism and Disaster on the Edge of Space","Adam Higginbotham",2025,"N",""],["Chaos: Charles Manson, the CIA, and the Secret History of the Sixties","Tom O'Neill",2019,"N",""],["Character Limit: How Elon Musk Destroyed Twitter","Kate Conger, Ryan Mac",2024,"N",""],["Charlie Munger: The Complete Investor","Tren Griffin",2018,"N",""],["Chip War: The Fight for the World's Most Critical Technology","Chris Miller",2023,"N",""],["Christian Dior: The Man Who Made the World Look New","Marie-France Pochna",2024,"N",""],["Chop Wood Carry Water: How to Fall in Love with the Process of Beocming Great","Joshua Medcalf",2025,"N",""],["Churchill: Walking with Destiny","Andrew Roberts",2023,"N",""],["Cinema Speculation","Quentin Tarantino",2024,"N",""],["City of Thieves","David Benioff",2022,"F",""],["Coach K: The Rise and Reign of Mike Krzyzewski","Ian O’Connor",2023,"N",""],["Conclave","Robert Harris",2025,"F",""],["Condé Nast: The Man and His Empire -- A Biography","Susan Roland",2024,"N",""],["Conflict: The Evolution of Warfare from 1945 - Ukraine","Andrew Roberts, David Petraeus",2023,"N",""],["Creativity, Inc.: Overcoming the Unseen Forces That Stand in the Way of True Inspiration","Ed Catmull",2022,"N",""],["Dark Wire: The Incredible True Story of the Largest Sting Operation Ever","Joseph Cox",2024,"N",""],["Dead in the Water: A True Story of Hijacking, Murder, and a Global Maritime Conspiracy","Matthew Campbell, Kit Chellel",2023,"N",""],["Devil's Bargain: Steve Bannon, Donald Trump, and the Nationalist Uprising","Joshua Green",2017,"N",""],["Discipline is Destiny: The Power of Self-Control","Ryan Holiday",2022,"N",""],["DisneyWar","James B. Stewart",2020,"N",""],["Disunited Nations: The Scramble for Power in an Ungoverned World","Peter Zeihan",2022,"N",""],["Dreams from My Father","Barack Obama",2016,"N","L"],["Dylan Goes Electric!: Newport, Seeger, Dylan, and the Night that Split the Sixties","Elijah Wald",2025,"N",""],["Easy Riders, Raging Bulls: How the Sex-Drugs-and-Rock 'N' Roll Generation Saved Hollywood","Peter Biskind",2024,"N",""],["eBoys: The First Inside Account of Venture Capitalists at Work","Randall Stross",2022,"N",""],["Educated: A Memoir","Tara Westover",2018,"N",""],["Eichmann in Jerusalem: A Report on the Banality of Evil","Hannah Arendt",2018,"N",""],["Eight Days in Yalta: How Churchill, Roosevelt, and Stalin Shaped the Post-World-War","Diana Preston",2022,"N",""],["Eisenhower in War and Peace","Jean Edward Smith",2023,"N",""],["Elon Musk","Walter Isaacson",2023,"N",""],["Elon Musk: Tesla, SpaceX, and the Quest for a Fantastic Future","Ashlee Vance",2022,"N",""],["Empire of Pain: The Secret History of the Sackler Dynasty","Patrick Radden Keefe",2021,"N",""],["Empire of the Elite: Inside Condé Nast and the Media Dynasty that Reshaped America","Michael Grynbaum",2026,"N",""],["Endpapers: A Family Story of Books, War, Escape, and Home","Alexander Wolff",2021,"N","F"],["Endurance: Shackleton's Incredible Voyage to the Antarctic","Edward Lansing",2022,"N",""],["Enlightenment Now: The Case for Reason, Science, Humanism, and Progress","Stephen Pinker",2020,"N",""],["Essentialism: The Disciplined Pursuit of Less","Greg McKeown",2023,"N",""],["Everything Is Tuberculosis: The History and Persistence of Our Deadliest Infection","Josh Green",2025,"N",""],["Excellent Advice for Living: Wisdom I Wish I'd Known Earlier","Kevin Kelly",2023,"N","F"],["Execution: The Discipline of Getting Things Done","Ron Charan",2025,"N",""],["Exhalation","Ted Chiang",2020,"N",""],["Facebook: The Inside Story","Steven Levy",2020,"N",""],["Factfulness: Ten Reasons We're Wrong About the World--and Why Things Are Better Than You Think","Hans Rosling",2023,"N",""],["Fat Chance: Beating the Odds Against Sugar, Processed Food, Obesity, and Disease","Robert Lustig",2019,"N",""],["Fear and Loathing in La Liga: Barcelona, Real Madrid, and the World's Greatest Sports Rivalry","Sid Lowe",2020,"N",""],["Feel Free","Zadie Smith",2019,"F",""],["Fiasco: The American Military Adventure in Iraq","Thomas Ricks",2019,"N",""],["Financial Intelligence: A Manager's Guide to Knowing What the Numbers Really Mean","Karen Berman, Joe Knight",2023,"N",""],["Finite and Infinite Games: A Vision of Life as Play and Possibility","James Carse",2023,"N",""],["First Man: The Life of Neil A. Armstrong","James Hansen",2022,"N",""],["Four Thousand Weeks: Time Management for Mortals","Oliver Burkeman",2022,"N","F"],["France on Trial: The Case of Marshal Pétain","Julian Jackson",2024,"N",""],["Frank: The Voice","James Kaplan",2024,"N",""],["Frederick Douglass: Prophet of Freedom","David Blight",2020,"N",""],["Freezing Order: A True Story of Money Laundering, Murder, and Surviving Vladimir Putin's Wrath","Bill Browder",2022,"N",""],["From Strength to Strength: Finding Success, Happiness, and Deep Purpose in the Second Half of Life","Arthur Brooks",2022,"N",""],["G-Man: J. Edgar Hoover and the Making of the American Century","Beverly Gage",2023,"N",""],["George Marshall: Defender of the Republic","David Roll",2023,"N",""],["Getting Things Done: The Art of Stress-Free Productivity","David Allen",2020,"N","L"],["Ghetto: The Invention of a Place, the History of an Idea","Mitchell Duneier",2017,"N",""],["Give and Take: A Revolutionary Approach to Success","Adam Grant",2014,"N",""],["Go Tell it on the Mountain","James Baldwin",2018,"F",""],["God Save Texas: A Journey into the Soul of the Lone Star State","Lawrence Wright",2019,"N",""],["Going Infinite: The Rise and Fall of a New Tycoon","Michael Lewis",2024,"N",""],["Good Inside: A Guide to Becoming the Parent You Want to Be","Dr. Becky Kennedy",2024,"N",""],["Good Profit: How Creating Value for Others Built One of the World's Most Successful Companies","Charles Koch",2020,"N",""],["Grace: President Obama and Ten Days in the Battle for America","Cody Keenan",2022,"N",""],["Grit: The Power of Passion and Perserverance","Angela Duckworth",2016,"N",""],["Hard Drive: Bill Gates and the Making of the Microsoft Empire","James Wallace, Jim Erickson",2022,"N","F"],["Hard Landing: The Epic Contest for Power and Profits That Plunged the Airlines into Chaos","Thomas Petzinger Jr.",2019,"N",""],["HBR's 10 Must Reads on High Performance","HBR",2024,"N",""],["Healing Back Pain: The Mind-Body Connection","Jonathan Sarno",2024,"N",""],["Heat 2: A Novel","Michael Mann",2024,"F",""],["Hell Yeah or No: What’s Worth Doing","Derek Sivers",2025,"N",""],["Helter Skelter: The True Story of the Manson Murders","Vincent Bugliosi",2019,"N",""],["Here is New York","E.B. White",2025,"N",""],["Hidden Genius: The secret ways of thinking that power the world's most successful people","Polina Marinova Pompliano",2023,"N",""],["Hidden Potential: The Science of Achieving Greater Things","Adam Grant",2023,"N",""],["Hidden Valley Road: Inside the Mind of an American Family","Robert Kolker",2021,"N",""],["High Output Management","Andy Grove",2019,"N",""],["Hillbilly Elegy: A Memoir of a Family and Culture in Crisis","J.D. Vance",2017,"N",""],["Hirohito and the Making of Modern Japan","Herbert Bix",2023,"N",""],["His Very Best: Jimmy Carter, a Life","Jonathan Alter",2021,"N",""],["Hit Makers: How to Succeed in an Age of Distraction","Derek Thompson",2017,"N",""],["Hitler","Joachim Fest",2023,"N",""],["Hits, Flops, and Other Illusions: My Fortysomething Years in Hollywood","Ed Zwick",2024,"N",""],["Hoax: Donald Trump, Fox News, and the Dangerous Distortion of Truth","Brian Stelter",2020,"N",""],["Homegrown: Timothy McVeigh and the Rise of Right-Wing Extremism","Jeffrey Toobin",2023,"N",""],["Horseman, Pass By","Larry McMurtry",2025,"F",""],["How Big Things Get Done: The Surprising Factors That Determine the Fate of Every Project","Bent Flyvbjerg",2024,"N",""],["How Judges Think","Richard Posner",2020,"N",""],["How Music Works","David Byrne",2025,"N",""],["How the World Really Works Works: A Scientist’s Guide to our Past, Present, and Future","Vaclav Smil",2022,"N",""],["How to Make a Few Billion Dollars","Brad Jacobs",2025,"N",""],["How to Take Smart Notes: One Simple Technique to Boost Writing, Learning and Thinking","Sonke Ahrens",2020,"N","F"],["Hunt, Gather, Parent: What Ancient Cultures Can Teach Us About the Lost Art of Raising Happy, Helpful Little Humans","Michaleen Doucleff",2023,"N",""],["I Love Capitalism!: An American Story","Ken Langone",2025,"N",""],["I Regret Almost Everything","Keith McNally",2025,"N",""],["I Will Teach You to Be Rich","Ramit Sethi",2014,"N",""],["I'll Be Gone in the Dark: One Woman's Obsessive Search for the Golden State Killer","Michelle McNamara",2019,"N",""],["Ibn Saud: The Desert Warrior Who Created the Kingdom of Saudi Arabia","Michael Darlow",2024,"N",""],["Ike's Bluff: President Eisenhower's Secret Battle to Save the World","Evan Thomas",2023,"N",""],["Ikigai: The Japanese Secret to a Long and Happy Life","Fransec Miralles, Hector Garcia",2021,"N",""],["In Cold Blood","Truman Capote",2017,"F",""],["In Their Lives: Great Writers on Great Beatles Songs","Andrew Blauner",2025,"N",""],["In This Economy? How Money and Markets Really Work","Kyla Scanlon",2024,"N",""],["Indistractable: How to Control Your Attention and Choose Your Life","Nir Eyal",2023,"N",""],["Insanely Simple: The Obsession that Drives Apple's Success","Ken Segall",2024,"N",""],["Invisible Man","Ralph Waldo Ellison",2017,"F",""],["It Was All a Lie: How the Republican Party Became Donald Trump","Stuart Stevens",2020,"N",""],["It's Not TV: The Spectacular Rise, Revolution, and Future of HBO","Felix Gillette, John Goblin",2023,"N",""],["James","Percival Everrett",2024,"F",""],["JFK: Coming of Age in the American Century, 1917-1956","Fredrik Logevall",2020,"N",""],["John & Paul: A Love Story in Songs","Ian Leslie",2025,"N","F"],["Joyride","Susan Orlean",2026,"N",""],["Killers of the Flower Moon: The Ossage Murders and the Birth of the FBI","David Grann",2022,"N",""],["Killing Pablo: The Hunt for the World's Greatest Outlaw","Mark Bowden",2023,"N",""],["Kissinger","Walter Isaacson",2022,"N",""],["Kitchen Confidential Updated Edition: Adventures in the Culinary Underbelly","Anthony Bourdain",2017,"N",""],["Kochland: The Secret History of Koch Industries and Corporate Power in America","Christopher Leonard",2019,"N",""],["Landslide: The Unmaking of the President, 1984-1988","Jane Mayer, Doyle McManus",2021,"N",""],["Larry McMurtry: A Life","Tracy Daugherty",2025,"N",""],["Leadership in War: Essential Lessons from Those Who Made History","Andrew Roberts",2024,"N",""],["Leadership: Six Studies in World Strategy","Henry Kissinger",2022,"N",""],["Leading: Learning from Life and My Years at Manchester United","Alex Ferguson",2020,"N",""],["Legacy of Ashes: The History of the CIA","Tim Weiner",2024,"N",""],["Leonardo da Vinci","Walter Isaacson",2023,"N",""],["Let the People Pick the President: The Case for Abolishing the Electoral College","Jesse Wegman",2020,"N",""],["Liar's Poker: Rising Through the Wreckage of Wall Street","Michael Lewis",2022,"N",""],["Life After Power: Seven Presidents and Their Search for Purpose Beyond The White House","Jared Cohen",2024,"N",""],["Life isn't Everything: Mike Nichols, as remembered by 150 of his closest friends","Ash Carter",2020,"N",""],["Life Stories: Profiles from the New Yorker","David Remnick",2024,"N",""],["Liftoff: Elon Musk and the Desperate Early Days That Launched SpaceX","Eric Berger",2024,"N",""],["Like a Rolling Stone: A Memoir","Jann Wenner",2022,"N",""],["Lincoln's Melancholy: How Depression Challenged a President and Fueled His Greatness","Joshua Wolf Shenk",2023,"N",""],["Live From New York: The Complete, Uncensored History of Saturday Night Live as Told by Its Stars, Writers, and Guests","James Andrew Miller",2025,"N",""],["London Falling: A Mysterious Death in a Gilded City and a Family's Search for Truth","Patrick Radden Keefe",2026,"N",""],["Lorne: The Man Who Invented Saturday Night Live","Susan Morrison",2025,"N",""],["Lush Life","Richard Price",2016,"N","F"],["Machine Made: Tammany Hall and the Creation of Modern American Politics","Terry Golway",2024,"N",""],["Magic: The Life of Earvin \"Magic\" Johnson","Roland Lazenby",2024,"N",""],["Make Something Wonderful","Steve Jobs",2023,"N",""],["Make Time: How to Focus on What Matters Every Day","Jake Knapp, Jon Zeratsky",2023,"N",""],["Making Movies","Sidney Lumet",2020,"N",""],["Man's Search for Meaning","Viktor Frankl",2014,"N",""],["Marathon Man","William Goldman",2025,"F",""],["Maxims for Thinking Analytically: The wisdom of legendary Harvard Professor Richard Zeckhauser","Dan Levy",2021,"N","F"],["McNamara at War: A New History","Philip Taubman, William Taubman",2025,"N",""],["Means of Ascent","Robert Caro",2025,"N","F"],["Means of Ascent","Robert Caro",2019,"N","L"],["Measure What Matters: How Google, Bono, and the Gates Foundation Rock the World with OKRs","John Doerr",2018,"N",""],["Memoirs","David Rockefeller",2025,"N",""],["Michael Jordan: The Life","Roland Lazenby",2015,"N",""],["Midlife: A Philosophical Guide","Kieran Setiya",2024,"N",""],["Midnight in Chernobyl: The Untold Story of the World's Greatest Nuclear Disaster","Adam Higginbotham",2020,"N",""],["Mike Nichols: A Life","Mark Harris",2025,"N",""],["Mindset: The New Psychology of Success","Carol Dweck",2018,"N",""],["Misbehaving: The Making of Behavioral Economics","Richard Thaler",2018,"N",""],["Modern Romance","Aziz Ansari, Eric Klinenberg",2015,"N",""],["Moneyball: The Art of Winning an Unfair Game","Michael Lewis",2018,"N",""],["Most Dangerous: Daniel Ellsberg and the Secret History of the Vietnam War","Steve Sheinkin",2024,"N",""],["Mountains Beyond Mountains: The Quest of Dr. Paul Farmer, a Man Who Would Cure the World","Tracy Kidder",2023,"N","L"],["My Life","Bill Clinton",2023,"N",""],["My Share of the Task: A Memoir","Stanley McChrystal",2021,"N",""],["My Turn: A Total Football Life","Johan Cruyff",2023,"N",""],["My Twenty-Five Years in Provence: Reflections on Then and Now","Peter Mayle",2023,"N",""],["Net Gains: Inside the Beautiful Game's Analytics Revolution","Ryan O'Hanlon",2022,"N",""],["Never Split the Difference: Negotiating as if Your Life Depended on It","Chris Voss",2024,"N",""],["Night People: How to Be a DJ in '90s New York City","Mark Ronson",2025,"N",""],["Nixon Agonistes: The Crisis of the Self-Made Man","Gary Willis",2024,"N",""],["Nixonland: The Rise of a President and the Fracturing of America","Rick Perlstein",2017,"N",""],["No Country for Old Men","Cormac McCarthy",2020,"F",""],["Nonviolent Communication: A Language of Life: Life-Changing Tools for Healthy Relationships","Marshall Rosenberg",2023,"N",""],["Notes of a Native Son","James Baldwin",2017,"N",""],["Oblivion or Glory: 1921 and the Making of Winston Churchill","David Stafford",2020,"N",""],["On Power","Robert Caro",2017,"N",""],["On Writing: A Memoir of the Craft","Stephen King",2023,"N",""],["Once Upon a Time ... in Hollywood","Quentin Tarantino",2021,"F",""],["One Giant Leap: The Impossible Mission That Flew Us to the Moon","Charles Fishman",2019,"N",""],["One Hundred Years of Solitude","Gabriel Garcia Marquez",2018,"N",""],["One of Them: An Eton College Memoir","Musa Okwonga",2022,"N",""],["Only the Paranoid Survive: How to Exploit the Crisis Points That Challenge Every Company","Andy Grove",2023,"N",""],["Open: An Autobiography","Andre Agassi",2021,"N","F"],["Opposable Thumbs: How Siskel & Ebert Changed Movies Forever","Matt Singer",2024,"N",""],["Oranges","John McPhee",2026,"N",""],["Oscar Wars: A History of Hollywood in Gold, Sweat, and Tears","Michael Schulman",2023,"N",""],["Our Man in Havana","Graham Greene",2024,"F",""],["Our Man: Richard Holbrooke and the End of the American Century","George Packer",2023,"N","F"],["Our Man: Richard Holbrooke and the End of the American Century","George Packer",2019,"N",""],["Outlive: The Science and Art of Longevity","Peter Attia",2023,"N","L"],["Outsmart Your Brain: Why Learning is Hard and How You Can Make it Easy","Daniel T. Willingham",2023,"N",""],["Palaces for the People: How Social Infrastructure Can Help Fight Inequality, Polarization, and the Decline of Civic Life","Eric Klinenberg",2018,"N",""],["Paradise Bronx: The Life and Times of New York's Greatest Borough","Ian Frazier",2024,"N",""],["Parting the Waters: America in the King Years 1954-63","Taylor Branch",2018,"N",""],["Paris to the Moon","Adam Gopnik",2026,"N",""],["Patton: Ordeal and Triumph","Ladislas Farago",2023,"N",""],["Pep Confidential: Inside Guardiola's First Season at Bayern Munich","Marti Peranau",2020,"N",""],["Pep Guardiola: Another Way of Winning: The Biography","Guillem Balague",2018,"N",""],["Pep Guardiola: The Evolution","Marti Peranau",2018,"N",""],["Pep's City: The Making of Super Team","Lu Martin, Pol Ballus",2019,"N",""],["Personal History","Katherine Graham",2019,"N","F"],["Play Nice, But Win: A CEO's Journey from Founder to Leader","Michael Dell",2025,"N",""],["Playing for Keeps: Michael Jordan and the World He Made","David Halberstam",2020,"N",""],["Playing to Win: How Strategy Really Works","A.G. Lafley, Roger Martin",2024,"N",""],["Power Failure: The Rise and Fall of an American Icon","William Cohan",2022,"N",""],["Powerful: Building a Culture of Freedom and Responsibility","Patty McCord",2018,"N",""],["Presidents of War: The Epic Story, from 1807 to Modern Times","Michael Beschloss",2019,"N",""],["Principles: Life and Work","Ray Dalio",2018,"N",""],["Private Empire: ExxonMobil and American Power","Steve Coll",2022,"N",""],["Project Mind Control: Sidney Gottlieb, the CIA, and the Tragedy of MKULTRA","John Lise",2026,"N",""],["Quiet: The Power of Introverts in a World That Can't Stop Talking","Susan Cain",2025,"N",""],["Quit: The Power of Knowing When to Walk Away","Annie Duke",2023,"N",""],["Rafa","Rafael Nadal",2024,"N",""],["Range: Why Generalists Triumph in a Specialized World","David Epstein",2019,"N",""],["RBG: In Her Own Words","Ruth Bader Ginsberg",2020,"N",""],["Reaganland: America's Right Turn 1976-1980","Rick Perlstein",2020,"N",""],["Red Notice: A True Story of High Finance, Murder and One Man's Fight for Justice","Bill Browder",2017,"N",""],["Reign of Terror: How the 9/11 Era Destabilized America and Produced Trump","Spencer Ackerman",2021,"N",""],["Return of the King: LeBron James, the Cleveland Cavaliers and the Greatest Comeback in NBA History","Brian Windhorst, Dave McMenamin",2017,"N",""],["Return to the Little Kingdom: Steve Jobs and the Creation of Apple","Michael Moritz",2022,"N",""],["Rising Star: The Making of Barack Obama","David Garrow",2017,"N",""],["Robert Kennedy: His Life","Evan Thomas",2016,"N",""],["Rocket Men: The Daring Odyssey of Apollo 8 and the Astronauts Who Made Man's First Journey to the Moon","Robert Kurson",2018,"N","F"],["Rogues: True Stories of Grifters, Killers, Rebels, and Crooks","Patrick Radden Keefe",2022,"N",""],["Romney: A Reckoning","McKay Coppins",2023,"N",""],["Rules of Civility","Amor Towles",2021,"F",""],["Runnin' Down a Dream: How to Thrive in a Career You Actually Love","Bill Gurley",2026,"N",""],["Sam Walton: Made In America","Sam Walton",2020,"N",""],["Sapiens: A Brief History of Mankind","Yuval Noah Harari",2016,"N",""],["Say Nothing: A True Story of Murder and Memory in Northern Ireland","Patrick Radden Keefe",2024,"N","F"],["Say Nothing: A True Story of Murder and Memory in Northern Ireland","Patrick Radden Keefe",2019,"N","F"],["Scaling People","Claire Hughes Johnson",2023,"N",""],["Sea Stories: My Life in Special Operations","Bill McRaven",2019,"N",""],["Serve to Win: The 14-Day Gluten-Free Plan for Physical and Mental Excellence","Novak Djokovic",2020,"N",""],["Setting the Table: The Transforming Power of Hospitality in Business","Danny Meyer",2023,"N",""],["Shadow Divers: The True Adventure of Two Americans Who Risked Everything to Solve One of the Last Mysteries of World War II","Robert Kurson",2020,"N","F"],["She Said: Breaking the Sexual Harassment Story That Helped Ignite a Movement","Jodi Kantor, Megan Thowey",2019,"N",""],["Shoe Dog: A Memoir by the Creator of Nike","Phil Knight",2019,"N",""],["Shoeless Joe","W.P. Kinsella",2024,"F",""],["Shortest Way Home: One Mayor's Challenge and a Model for America's Future","Pete Buttigieg",2019,"N",""],["Showboat: The Life of Kobe Bryant","Roland Lazenby",2022,"N",""],["Skunk Works: A Personal Memoir of My Years of Lockheed","Leo Janos",2020,"N",""],["Slaying the Badger: Greg LeMond, Bernard Hinault, and the Greatest Tour de France","Richard Moore",2025,"N",""],["Smarter Faster Better: The Secrets of Being Productive in Life and Business","Charles Duhigg",2018,"N",""],["Sonny Boy","Al Pacino",2024,"N",""],["Source Code: My Beginnings","Bill Gates",2025,"N",""],["Spare","Prince Harry",2023,"N",""],["Start with Why: How Great Leaders Inspire Everyone to Take Action","Simon Sinek",2017,"N",""],["Steve Jobs","Walter Isaacson",2014,"N",""],["Steve Jobs in Exile: The Untold Story of NeXT and the Remaking of an American Visionary","Geoffrey Cain",2026,"N",""],["Strategic Storytelling: How to Create Persuasive Business Presentations","Dave McKinsey",2021,"N",""],["Streetwise: Getting to and Through Goldman Sachs","Lloyd Blankfein",2026,"N",""],["Stress Test: Reflections on Financial Crises","Timothy Geithner",2020,"N",""],["String Theory","David Foster Wallace",2017,"N",""],["Stuart Little","E.B. White",2025,"F",""],["Super Pumped: The Battle for Uber","Mike Isaac",2019,"N",""],["Supercommunicators: How to Unlock the Secret Language of Connection","Charles Duhigg",2024,"N",""],["Surely You're Joking, Mr. Feynman!","Richard Feynman",2018,"N",""],["Surprise, Kill, Vanish: The Secret History of CIA Paramilitary Armies, Operators, and Assassins","Annie Jacobsen",2024,"N",""],["Swing Time","Zadie Smith",2017,"F",""],["Table for Two: Fictions","Amor Towles",2024,"F",""],["Talent Is Overrated: What Really Separates World-Class Performers from Everybody Else","Geoff Colvin",2024,"N",""],["Talent: How to Identify Energizers, Creatives, and Winners Around the World","Tyler Cowen, Daniel Gross",2022,"N",""],["Talking Pictures: How to Watch Movies","Ann Hornaday",2020,"N",""],["Tape Sucks: Inside Data Domain, A Silicon Valley Growth Story","Frank Slootman",2021,"N",""],["Taste: My Life Through Food","Stanley Tucci",2023,"N",""],["Team of Teams: New Rules of Engagement for a Complex World","Stanley McChrystal",2019,"N",""],["That Will Never Work: The Birth of Netflix and the Amazing Life of an Idea","Marc Randolph",2020,"N",""],["The 15 Commitments of Conscious Leadership: A New Paradigm for Sustainable Success","Jim Dethmer, Diana Chapman",2023,"N",""],["The 7 Habits of Highly Effective People: Powerful Lessons in Personal Change","Stephen Covey",2024,"N","F"],["The Accidental Superpower: The Next Generation of American Preeminence and the Coming Global Disorder","Peter Zeihan",2019,"N",""],["The Achilles Trap: Saddam Hussein, the C.I.A., and the Origins of America's Invasion of Iraq","Steve Coll",2024,"N",""],["The Algorithm: The Hypergrowth Formula that Transformed Tesla, Lululemon, General Motors and SpaceX","Jon McNeill",2026,"N",""],["The Alliance: Managing Talent in the Networked Age","Reid Hoffman, Ben Casnocha",2015,"N",""],["The Andromeda Strain","Michael Chrichton",2023,"F",""],["The Anomaly","Hervé Le Tellier",2023,"F",""],["The Arsenal of Democracy: FDR, Detroit, and an Epic Quest to Arm an America at War","A.J. Baime",2019,"N","F"],["The Art of Learning: An Inner Journey to Optimal Performance","Josh Waitzkin",2024,"N",""],["The Art Thief: A True Story of Love, Crime, and a Dangerous Obsession","Michael Finkel",2026,"N",""],["The Art of Thinking Clearly","Rolf Dobelli",2020,"N",""],["The Assassins' Gate: America in Iraq","George Packer",2023,"N",""],["The Attention Merchants: The Epic Scramble to Get Inside Our Heads","Tim Wu",2018,"N",""],["The Audacity to Win: The Inside Story and Lessons of Barack Obama's Historic Victory","David Plouffe",2016,"N",""],["The Autobiography of Malcolm X","Malcolm X",2017,"N",""],["The Back Channel: A Memoir of American Diplomacy and the Case for Its Renewal","William Burns",2019,"N",""],["The Barcelona Complex: Lionel Messi and the Making—and Unmaking—of the World's Greatest Soccer Club","Simon Kuper",2021,"N",""],["The Best and the Brightest","David Halberstam",2023,"N",""],["The Best and the Brightest","David Halberstam",2018,"N",""],["The Black Dahlia","James Ellroy",2025,"F",""],["The Black Jacobins: Toussaint L'Ouverture and the San Domingo Revolution","C.L.R. James",2023,"N",""],["The Body: A Guide for Occupants","Bill Bryson",2022,"N",""],["The Book of Why: The New Science of Cause and Effect","Judea Pearl",2019,"N",""],["The Box: How the Shipping Container Made the World Smaller and the World Economy Bigger","Marc Levinson",2021,"N",""],["The Bridge: The Life and Rise of Barack Obama","David Remnick",2016,"N",""],["The Brothers: John Foster Dulles, Allen Dulles, and Their Secret World War","Stephen Kinzer",2021,"N",""],["The Captain Class: The Hidden Force That Creates the World's Greatest Teams","Sam Walker",2023,"N",""],["The Case Against Education: Why the Education System Is a Waste of Time and Money","Bryan Caplan",2020,"N",""],["The Club: How the Premier League Became the Richest, Most Disruptive Business in Sport","Jonathan Clegg, Joshua Robinson",2023,"N",""],["The Comfort Crisis: Embrace Discomfort To Reclaim Your Wild, Happy, Healthy Self","Michael Easter",2023,"N",""],["The Coming Wave: Technology, Power, and the Twenty-first Century's Greatest Dilemma","Mustafa Suleyman",2023,"N",""],["The Contender: The Story of Marlon Brando","William J. Mann",2020,"N",""],["The Corner Office: Indispensable and Unexpected Lessons from CEOs on How to Lead and Succeed","Adam Bryant",2022,"N",""],["The Courage to Be Disliked: How to Free Yourself, Change Your Life, and Achieve Real Happiness","Ichiro Kishimi",2024,"N",""],["The Death of Ivan Ilyich","Leo Tolstoy",2025,"F",""],["The Defining Decade: Why Your Twenties Matter--And How to Make the Most of Them Now","Meg Jay",2014,"N",""],["The Devil in the White City: Murder, Magic, and Madness at the Fair That Changed America","Erik Larson",2022,"N",""],["The Devil's Chessboard: Allen Dulles, the CIA, and the Rise of America's Secret Government","David Talbot",2023,"N",""],["The Devils Will Get No Rest: FDR, Churchill, and the Plan that Won the War","James B. Conroy",2023,"N",""],["The Dreyfus Affair: The Scandal That Tore France in Two","Piers Paul Read",2024,"N",""],["The Education of a Coach","David Halberstam",2020,"N",""],["The Education of an Idealist: A Memoir","Samantha Power",2019,"N",""],["The Effective Executive: The Definitive Guide to Getting the Right Things Done","Peter Drucker",2022,"N",""],["The Emperor of All Maladies: A Biography of Cancer","Siddhartha Mukherjee",2019,"N","L"],["The End of the Affair","Graham Greene",2020,"F",""],["The Everything Store: Jeff Bezos and the Age of Amazon","Brad Stone",2014,"N",""],["The Facebook Effect: The Inside Story of the Company that is Connecting the World","David Kirkpatrick",2014,"N",""],["The Fall of the House of FIFA: The Multimillion-Dollar Corruption at the Heart of Global Soccer","David Conn",2022,"N",""],["The Fifth Risk: Undoing Democracy","Michael Lewis",2019,"N",""],["The Fire Is upon Us: James Baldwin, William F. Buckley Jr., and the Debate over Race in America","Nicholas Buccola",2019,"N",""],["The Fire Next Time","James Baldwin",2017,"N",""],["The Fish That Ate the Whale: The Life and Times of America's Banana King","Rich Cohen",2024,"N",""],["The Five Dysfunctions of a Team: A Leadership Fable","Patrick Lencioni",2025,"N",""],["The Formula: How Rogues, Geniuses, and Speed Freaks Reengineered F1 into the World's Fastest Growing Global Sport","Joshua Robinson, Jonathan Clegg",2024,"N",""],["The Founders: The Story of Paypal and the Entrepreneurs Who Shaped Silicon Valley","Jimmy Soni",2023,"N",""],["The Fund: Ray Dalio, Bridgewater Associates, and the Unraveling of a Wall Street Legend","Rob Copeland",2023,"N",""],["The Gatekeepers: How the White House Chiefs of Staff Define Every Presidency","Chris Whipple",2017,"N",""],["The Gene: An Intimate History","Siddhartha Mukherjee",2019,"N",""],["The Ghost: The Secret Life of CIA Spymaster James Jesus Angleton","Jefferson Morley",2021,"N",""],["The Goal: A Process of Ongoing Improvement","Eliyahu M. Goldratt",2023,"N",""],["The Gods of New York: Egotists, Idealists, Opportunists, and the Birth of the Modern City: 1986-1990","Jonathan Mahler",2026,"N",""],["The Gold Standard: Building a World-Class Team","Mike Krzyzewski",2023,"N",""],["The Great CEO Within: The Tactical Guide to Company Building","Matt Mochary",2023,"N",""],["The Great Influenza: The Story of the Deadliest Pandemic in History","John Barry",2020,"N",""],["The Great Movies","Roger Ebert",2026,"N",""],["The Great Movies II","Roger Ebert",2026,"N",""],["The Guns of August","Barbara Tuchman",2023,"N",""],["The Hard Thing About Hard Things: Building a Business When There Are No Easy Answers","Ben Horowitz",2016,"N",""],["The Haves and the Have Yachts: Dispatches on the Ultra Rich","Evan Osnos",2025,"N",""],["The Heartbeat of Wounded Knee: Native America from 1890 to the Present","David Treuer",2020,"N",""],["The House of Gucci: A True Story of Murder, Madness, Glamour, and Greed","Sarah Gay Forden",2021,"N",""],["The Hundred-Year Marathon: China's Secret Strategy to Replace America as the Global Superpower","Michael Pillsbury",2019,"N",""],["The Impeachers: The Trial of Andrew Johnson and the Dream of a Just Nation","Brenda Wineapple",2019,"N",""],["The Infinity Machine: Demis Hassabis, DeepMind and the Quest for Superintelligence","Sebastian Mallaby",2026,"N",""],["The Inner Game of Tennis: The Classic Guide to the Mental Side of Peak Performance","Timothy Gallwey",2019,"N",""],["The Joy of Movement: How exercise helps us find happiness, hope, connection, and courage","Kelly McConigal",2020,"N",""],["The Kid Stays in the Picture: A Notorious Life","Robert Evans",2023,"N",""],["The Last Campaign: Robert F. Kennedy and 82 Days That Inspired America","Thurston Clarke",2018,"N",""],["The Last Lecture: Really Achieving Your Childhood Dreams","Randy Pausch",2022,"N",""],["The Last Picture Show","Larry McMurtry",2020,"F","F"],["The Last Tycoons: The Secret History of Lazard Freres & Co.","William Cohan",2023,"N",""],["The Lessons of History","Will Durant, Ariel Durant",2022,"N",""],["The Looming Tower: Al-Qaeda and the Road to 9/11","Lawrence Wright",2018,"N","F"],["The Lords of Strategy: The Secret Intellectual History of the New Corporate World","Walter Kiechel",2023,"N",""],["The Loudest Voice in the Room: How the Brilliant, Bombastic Roger Ailes Built Fox News--and Divided a Country","Gabriel Sherman",2017,"N",""],["The Mailroom: Hollywood History from the Bottom Up","David Rensin",2026,"N",""],["The Making of a Manager: What to Do When Everyone Looks to You","Julie Zhou",2019,"N",""],["The Making of the Atomic Bomb","Richard Rhodes",2023,"N","F"],["The Making of the President 1960","Theodore H. White",2020,"N",""],["The Man Who Owns the News: Inside the Secret World of Rupert Murdoch","Michael Wolff",2021,"N",""],["The Man Who Ran Washington: The Life and Times of James A. Baker III","Peter Baker, Susan Glaser",2020,"N",""],["The Man Who Solved the Market: How Jim Simons Launched the Quant Revolution","Gregory Zuckerman",2020,"N",""],["The Master of the Senate","Robert Caro",2018,"N","F"],["The Master: The Brilliant Career of Roger Federer","Christopher Clarey",2024,"N",""],["The Master: The Brilliant Career of Roger Federer","Christopher Clarey",2021,"N",""],["The McKinsey Way","Ethan Raisel",2019,"N",""],["The Medici: Power, Money, and Ambition in the Italian Renaissance","Paul Strathern",2023,"N",""],["The Men Who Would Be King: An Almost Epic Tale of Moguls, Movies, and a Company Called DreamWorks","Nicole LaPorte",2024,"N",""],["The Mindful Athlete: Secrets to Pure Performance","George Mumford",2022,"N",""],["The Mission: The CIA in the 21st Century","Tim Weiner",2025,"N",""],["The Money Trap: Lost Illusions Inside the Tech Bubble","Alok Sama",2024,"N",""],["The Naked and the Dead","Norman Mailer",2018,"F",""],["The New Jim Crow: Mass Incarceration in the Age of Colorblindness","Michelle Alexander",2017,"N",""],["The New New Thing: A Silicon Valley Story","Michael Lewis",2022,"N",""],["The New One Minute Manager","Ken Blanchard, Spencer Johnson",2023,"N",""],["The Nine: Inside the Secret World of the Supreme Court","Jeffrey Toobin",2019,"N",""],["The Nvidia Way: Jensen Huang and the Making of a Tech Giant","Tae Kim",2025,"N",""],["The Only Plane in the Sky: An Oral History of September 11, 2001","Garrett Graff",2019,"N",""],["The Operator: David Geffen Builds, Buys, and Sells the New Hollywood","Thomas King",2023,"N",""],["The Optimist: Sam Altman, OpenAI and the Race to Invent the Future","Keach Hagey",2025,"N",""],["The Other Wes Moore: One Name, Two Fates","Wes Moore",2025,"N",""],["The Outsiders: Eight Unconventional CEOs and Their Radically Rational Blueprint for Success","William Thorndike",2020,"N",""],["The Oxygen Advantage: The Simple, Scientifically Proven Breathing Techniques for a Healthier, Slimmer, Faster, and Fitter You","Patrick McKeown",2019,"N",""],["The Passage of Power","Robert Caro",2017,"N","F"],["The Path to Power","Robert Caro",2019,"N",""],["The Power and the Money: The Epic Clashes Between Commanders in Chief and Titans of Industry","Tevi Troy",2024,"N",""],["The Power Broker","Robert Caro",2017,"N",""],["The Power Law: Venture Capital and the Making of the Future","Sebastian Mallaby",2022,"N",""],["The Power of Habit: Why We Do What We Do In Life and Work","Charles Duhigg",2022,"N",""],["The Premonition: A Pandemic Story","Michael Lewis",2021,"N",""],["The Price of Peace: Money, Democracy, and the Life of John Maynard Keynes","Zach Carter",2020,"N",""],["The Price We Pay: What Broke American Health Care - and How to Fix It","Marty Makary",2019,"N",""],["The Prize: The Epic Quest for Oil, Money & Power","Daniel Yergin",2019,"N",""],["The Profiteers: Bechtel and the Men Who Built the World","Sally Denton",2023,"N",""],["The Promise of a Pencil: How an Ordinary Person Can Create Extraordinary Change","Adam Braun",2014,"N",""],["The Psychology of Money: Timeless Lessons on Wealth, Greed, and Happiness","Morgan Housel",2022,"N",""],["The Quiet American","Graham Greene",2022,"N","F"],["The Revenue Operations Manual: How to Build a High-Growth, Predictable and Scalable Business","Sean Lane",2025,"N",""],["The Revolution Was Televised: The Cops, Crooks, Slingers, and Slayers Who Changed TV Forever","Alan Sepinwall",2015,"N",""],["The Ride of a Lifetime: Lessons Learned from 15 Years as CEO of the Walt Disney Company","Bob Iger",2019,"N",""],["The Right Stuff","Tom Wolfe",2024,"N",""],["The Rise and Fall of the Third Reich","William Shirer",2023,"N",""],["The Rise of Theodore Roosevelt","Edmund Morris",2022,"N",""],["The Road","Cormac McCarthy",2023,"F",""],["The Road from the Past: Traveling through History in France","Ina Caro",2022,"N",""],["The Road to Camelot: Inside JFK's Five-Year Campaign","Thomas Oliphant",2017,"N",""],["The Road to Character","David Brooks",2023,"N",""],["The Running Ground: A Father, a Son, and the Simplest of Sports","Nicholas Thompson",2025,"N",""],["The Score Takes Care of Itself: My Philosophy of Leadership","Bill Walsh",2023,"N",""],["The Score Takes Care of Itself: My Philosophy of Leadership","Bill Walsh",2018,"N","L"],["The Secret Race: Inside the Hidden World of the Tour de France","Tyler Hamilton",2025,"N",""],["The Smartest Guys in the Room: The Amazing Rise and Scandalous Fall of Enron","Bethany McLean, Peter Elkind",2019,"N",""],["The Snakehead: An Epic Tale of the Chinatown Underworld and the American Dream","Patrick Radden Keefe",2024,"N",""],["The Soul of New Machine","Tracy Kidder",2023,"N",""],["The Sports Gene: Inside the Science of Extraordinary Athletic Performance","David Epstein",2019,"N",""],["The Spy Who Came in from the Cold","John le Carre",2020,"F","F"],["The Spymasters: How the CIA's Directors Shape History and Guard the Future","Chris Whipple",2021,"N",""],["The Stranger","Albert Camus",2020,"F",""],["The Stranger: Barack Obama in the White House","Chuck Todd",2017,"N",""],["The Sweet Forever","George Pelecanos",2018,"F",""],["The Talented Mr. Ripley","Patricia Highsmith",2024,"F",""],["The Targeter: My Life in the CIA, Hunting Terrorists and Challenging the White House","Nada Bakos",2019,"N",""],["The Tender Bar: A Memoir","J.R. Moehringer",2023,"N",""],["The Third Man","Graham Greene",2024,"F",""],["The Triple Agent: The al-Qaeda Mole who Infiltrated the CIA","Joby Warrick",2019,"N",""],["The Twelve Lives of Alfred Hitchcock: An Anatomy of the Master of Suspense","Edward White",2021,"N",""],["The Underground Railroad","Colson Whithead",2017,"N",""],["The Undoing Project: A Friendship That Changed Our Minds","Michael Lewis",2019,"N",""],["The Uninhabitable Earth: Life After Warming","David Wallace-Wells",2019,"N",""],["The Upside of Stress: Why Stress Is Good for You, and How to Get Good at It","Kelly McConigal",2015,"N",""],["The Vanity Fair Diaries: 1983-1992","Tina Brown",2026,"N",""],["The Victory Machine: The Making and Unmaking of the Warriors Dynasty","Ethan Sherwood Strauss",2020,"N",""],["The Wager: A Tale of Shipwreck, Mutiny and Murder","David Grann",2023,"N",""],["The World as It Is: A Memoir of the Obama White House","Ben Rhodes",2018,"N",""],["The Yellow Pad: Making Better Decisions in an Uncertain World","Robert Rubin",2023,"N",""],["Think Faster, Talk Smarter: How to Speak Successfully When You're Put on the Spot","Matt Abrahams",2024,"N",""],["Thinking in Bets: Making Smarter Decisions When You Don't Have All the Facts","Annie Duke",2018,"N",""],["Thinking in Systems: A Primer","Donella Meadows",2019,"N",""],["Thirteen Days in September: Carter, Begin, and Sadat at Camp David","Lawrence Wright",2024,"N",""],["Thirteen Days: A Memoir of the Cuban Missile Crisis","Robert F. Kennedy",2023,"N",""],["Thomas Jefferson: The Art of Power","Jon Meacham",2021,"N",""],["Those Guys Have All the Fun: Inside the World of ESPN","James Andrew Miller",2014,"N",""],["Tiger Woods","Armen Keteyian, Jeff Benedict",2018,"N",""],["Time's Echo: The Second World War, The Holocaust, and the Music of Rememberance","Jeremy Eichler",2023,"N",""],["Tinderbox: HBO's Ruthless Pursuit of New Frontiers","James Andrew Miller",2021,"N",""],["Tinker, Tailor, Soldier, Spy","John le Carre",2024,"F",""],["Titan: The Life of John D. Rockefeller, Sr.","Ron Chernow",2022,"N",""],["To Start a War: How the Bush Administration Took America into Iraq","Robert Draper",2020,"N",""],["Tomorrow, and Tomorrow, and Tomorrow: A Novel","Gabrielle Zevin",2024,"F","F"],["Too Dumb to Fail: How the GOP Betrayed the Reagan Revolution to Win Elections (and How It Can Reclaim Its Conservative Roots)","Matt K. Lewis",2016,"N",""],["Toujours Provence","Peter Mayle",2023,"N",""],["Trick Mirror: Reflections on Self-Delusion","Jia Tolentino",2019,"N",""],["Trillion Dollar Coach: The Leadership Playbook of Silicon Valley's Bill Campbell","Eric Schmidt, Jonathan Rosenberg, Alan Eagle",2019,"N",""],["True Grit","Charles Portis",2026,"F",""],["Triumph of the City: How Our Greatest Invention Makes Us Richer, Smarter, Greener, Healthier, and Happier","Edward Glaeser",2015,"N",""],["Truman","David McCullough",2020,"N",""],["Tuxedo Park: A Wall Street Tycoon and the Secret Palace of Science that Changed the Course of World War II","Jennet Conant",2023,"N",""],["TV (The Book): Two Experts Pick the Greatest American Shows of All Time","Alan Sepinwall, Matt Zoller Seitz",2016,"N",""],["Twilight of the Elites: America after Meritocracy","Chris Hayes",2021,"N",""],["Ultralearning: Master Hard Skills, Outsmart the Competition, and Accelerate Your Career","Scott Young",2019,"N",""],["Unaccountable: What Hospitals Won't Tell You and How Transparency Can Revolutionize Health Care","Marty Makary",2019,"N",""],["Unleashed: The Unapologetic Leader's Guide to Empowering Everyone Around You","Frances Frei, Eliza Foss",2025,"N",""],["Unreasonable Hospitality: The Remarkable Power of Giving People More Than They Expect","Will Guidara",2023,"N",""],["Unscripted: The Epic Battle for a Media Empire and the Redstone Family Legacy","James B. Stewart, Rachel Abrams",2023,"N",""],["Upheaval: Turning Points for Nations in Crisis","Jared Diamond",2019,"N",""],["War Is a Force That Gives Us Meaning","Christopher Hedges",2023,"N",""],["Warfighting: The US. Marine Corps Book of Strategy","A.M. Gray",2022,"N","F"],["Watergate: A New History","Garrett Graff",2022,"N",""],["We Might As Well Win: On the Road to Success with the Mastermind Behind Eight Tour de France Victories","Johan Bruyneel",2025,"N",""],["We Own This City: A True Story of Crime, Cops, and Corruption","Justin Fenton",2022,"N",""],["We Were Eight Years in Power","Ta-Nehisi Coates",2017,"N",""],["Western Star: The Life and Legends of Larry McMurtry","David Streifeid",2026,"N",""],["What Got You Here Won't Get You There: How Successful People Become Even More Successful","Marshall Goldsmith",2023,"N",""],["What I Talk about When I Talk about Running: A Memoir","Haruki Murakami",2021,"N",""],["What It Takes: Lessons in the Pursuit of Excellence","Stephen Schwarzman",2024,"N",""],["What it Takes: The Way to the White House","Richard Ben Cramer",2022,"N",""],["What Remains: A Memoir of Fate, Friendship and Love","Carole Radziwill",2026,"N",""],["What the CEO Wants You to Know: How Your Company Really Works","Ram Charan",2025,"N",""],["What You Do Is Who You Are: How to Create Your Business Culture","Ben Horowitz",2023,"N",""],["Wheelmen: Lance Armstrong, the Tour de France, and the Greatest Sports Conspiracy Ever","Reed Albergotti, Vanessa O'Connell",2026,"N",""],["When Breath Becomes Air","Paul Kalanithi",2017,"N","L"],["When I Stop Talking, You'll Know I'm Dead: Useful Stories from a Persuasive Man","Jerry Weintraub",2026,"N",""],["When McKinsey Comes to Town: The Hidden Influence of the World's Most Powerful Consulting Firm","Walt Bogdanich, Michael Forsythe",2022,"N",""],["When the Clock Broke: Con Men, Conspiracists, and How America Cracked Up in the Early 1990s","John Ganz",2024,"N",""],["When the Going Was Good: An Editor's Adventures During the Last Golden Age of Magazines","Graydon Carter",2025,"N",""],["When the Sea Came Alive: An Oral History of D-Day","Garrett Graff",2024,"N",""],["When: The Scientific Secrets of Perfect Timing","Daniel Pink",2025,"N",""],["Wherever You Go, There You Are: Mindfulness Meditation in Everyday Life","Jonathan Kabat-Zinn",2023,"N","L"],["White Teeth","Zadie Smith",2017,"F",""],["Who is Michael Ovitz?","Michael Ovitz",2018,"N",""],["Who Knew","Barry Diller",2025,"N",""],["Why Not the Best?: The First Fifty Years","Jimmy Carter",2025,"N",""],["Why We Sleep: Unlocking the Power of Sleep and Dreams","Matthew Walker",2018,"N",""],["Wild Bill Donovan","Douglas Waller",2025,"N",""],["Win Every Argument: The Art of Debating, Persuading, and Public Speaking","Mehdi Hassan",2023,"N",""],["Working","Robert Caro",2019,"N","F"],["Working Backwards: Insights, Stories, and Secrets from Inside Amazon","Colin Bryar, Bill Carr",2021,"N",""],["Writing for Busy Readers: Communicate More Effectively in the Real World","Todd Rogers, Jessica Lasky-Fink",2023,"N",""],["Zodiac","Robert Graysmith",2026,"N",""]]</script>
+<script>
+(() => {
+  const SHEET_ID = "1EcfuNdzY2i5wm-A5EJX2JzTOrFweOu60p0o1zfDDSAY";
+  const LIVE_URL = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=Bookshelf&range=B5:F&headers=0`;
+  const SNAPSHOT_DATE = "Oct 20, 2026";
+  // Cloth binding colors: [cloth, lettering]
+  const CLOTHS = [
+    ["#7b2226", "#f1dfc0"], ["#1f3a5f", "#efe4cc"], ["#2f4b3a", "#efe2c4"], ["#c49a3a", "#2a1e10"],
+    ["#4a3b5c", "#eee1cf"], ["#8a5a2b", "#f6e8cf"], ["#2b2d30", "#e9d6a6"], ["#1d5c63", "#f1e6cf"],
+    ["#a8452f", "#f8ead4"], ["#5d6b4a", "#f3ead2"], ["#d8cdb4", "#2b2620"], ["#3c4f7a", "#f1e7d1"],
+    ["#6e2f4f", "#f3e2cf"], ["#9a8f78", "#1f1c16"], ["#14332c", "#d9c48c"], ["#b7562a", "#1d140c"]
+  ];
+
+  const $ = s => document.querySelector(s);
+  const hash = s => { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const norm = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+  const lastName = a => { const first = a.split(",")[0].trim(); const p = first.split(/\s+/); return p[p.length - 1] || first; };
+
+  let books = [];
+  const state = { q: "", f: new Set(), group: "year", mode: "spines" };
+  try { state.group = localStorage.getItem("shelf-group") || state.group; state.mode = localStorage.getItem("shelf-mode") || state.mode; } catch (e) {}
+  $("#group").value = state.group;
+  const setModeButtons = () => document.querySelectorAll("#mode button").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.m === state.mode)));
+  setModeButtons();
+
+  // Covers. covers.json is written nightly by the GitHub Action; anything it hasn't seen yet
+  // is looked up in the browser and remembered in localStorage.
+  // Entry shape: { src, color?, ink? }, or { none: <timestamp> } when no cover was found.
+  const COVERS = {};
+  const coverKey = b => b.key + "|" + norm(b.author.split(",")[0]);
+  try { Object.assign(COVERS, JSON.parse(localStorage.getItem("shelf-covers") || "{}")); } catch (e) {}
+  let saveTimer;
+  const saveCovers = () => { clearTimeout(saveTimer); saveTimer = setTimeout(() => { try { localStorage.setItem("shelf-covers", JSON.stringify(COVERS)); } catch (e) {} }, 800); };
+  const inkFor = hex => { const n = parseInt(hex.slice(1), 16); const l = (0.2126 * (n >> 16) + 0.7152 * (n >> 8 & 255) + 0.0722 * (n & 255)) / 255; return l > 0.6 ? "#1f1a14" : "#f6efe2"; };
+  function applyCover(b) {
+    const c = COVERS[b.ckey];
+    b.cover = c && c.src ? c.src : null;
+    if (c && c.color) b.cloth = [c.color, c.ink || inkFor(c.color)];
+  }
+
+  function build(rows) {
+    const snapTags = new Map(SNAP.map(r => [norm(r[0]) + "|" + r[2], r[4]]));
+    const list = rows.filter(r => r[0]).map((r, i) => {
+      const [title, author, year, type, tagRaw] = r;
+      let tag = /life/i.test(tagRaw || "") ? "L" : /fav/i.test(tagRaw || "") ? "F" : (tagRaw === "L" || tagRaw === "F" ? tagRaw : "");
+      if (!tag) tag = snapTags.get(norm(title) + "|" + year) || "";
+      const [main, ...rest] = title.split(/:\s+/);
+      return { id: i, title, main: main.trim(), sub: rest.join(": ").trim(), author: author || "Unknown", year: year || null, type: /^f/i.test(type || "") ? "F" : "N", fav: tag === "F" || tag === "L", life: tag === "L", key: norm(title) };
+    });
+    const reads = {};
+    list.forEach(b => { (reads[b.key] = reads[b.key] || []).push(b); });
+    list.forEach(b => {
+      const all = reads[b.key].slice().sort((a, c) => (a.year || 0) - (c.year || 0));
+      b.readCount = all.length; b.readNo = all.indexOf(b) + 1; b.allYears = all.map(x => x.year);
+      const h = hash(b.title + b.author);
+      b.cloth = CLOTHS[h % CLOTHS.length];
+      const len = b.main.length;
+      b.w = Math.max(22, Math.min(46, 20 + Math.round(len / 3.2) + (h >> 5) % 9));
+      b.h = 108 + (h >> 9) % 40;
+      b.bands = (h >> 13) % 3;
+      b.lean = (h >> 17) % 41 === 0;
+      b.ckey = coverKey(b);
+      applyCover(b);
+    });
+    return list;
+  }
+
+  function parseCSV(text) {
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+      else if (c === '"') q = true;
+      else if (c === ",") { row.push(cell); cell = ""; }
+      else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(cell); rows.push(row); row = []; cell = ""; }
+      else cell += c;
+    }
+    if (cell || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+  }
+
+  function matches(b) {
+    if (state.f.has("F") !== state.f.has("N")) { if (state.f.has("F") && b.type !== "F") return false; if (state.f.has("N") && b.type !== "N") return false; }
+    if (state.f.has("fav") && !state.f.has("life") && !b.fav) return false;
+    if (state.f.has("life") && !state.f.has("fav") && !b.life) return false;
+    if (state.f.has("life") && state.f.has("fav") && !b.fav) return false;
+    if (state.q) { const q = norm(state.q); if (!norm(b.title + " " + b.author).includes(q)) return false; }
+    return true;
+  }
+
+  function spine(b) {
+    const cls = ["spine", b.type === "F" ? "fic" : "", b.fav ? "fav" : "", b.w >= 36 ? "wide" : "", b.lean ? "lean" : "", b.readNo > 1 ? "has-re" : ""].join(" ");
+    const bands = b.fav ? '<i class="band b1"></i><i class="band b2"></i>' : (b.bands > 0 ? '<i class="band b1"></i>' : "") + (b.bands > 1 ? '<i class="band b2"></i>' : "");
+    return `<div class="slot"><button type="button" class="${cls}" data-id="${b.id}" style="--c:${b.cloth[0]};--t:${b.cloth[1]};--w:${b.w}px;--h:${b.h}px" aria-label="${esc(b.title)} by ${esc(b.author)}, read ${b.year || "undated"}" title="${esc(b.main)} — ${esc(b.author)}">${bands}${b.life ? '<i class="ribbon"></i>' : ""}<span class="t">${esc(b.main)}</span><span class="a">${esc(lastName(b.author))}</span>${b.readNo > 1 ? `<i class="re">${b.readNo}×</i>` : ""}</button></div>`;
+  }
+
+  function face(b) {
+    const cls = ["face", b.fav ? "fav" : "", b.life ? "life" : ""].join(" ");
+    return `<div class="slot"><button type="button" class="${cls}" data-id="${b.id}" style="--c:${b.cloth[0]};--t:${b.cloth[1]}" aria-label="${esc(b.title)} by ${esc(b.author)}, read ${b.year || "undated"}" title="${esc(b.main)} — ${esc(b.author)}"><span class="gen"><b>${esc(b.main)}</b><i>${esc(lastName(b.author))}</i></span>${b.cover ? `<img src="${esc(b.cover)}" alt="" loading="lazy" decoding="async" onerror="this.remove()">` : ""}${b.fav ? '<i class="ribbon"></i>' : ""}${b.readNo > 1 ? `<i class="re">${b.readNo}×</i>` : ""}</button></div>`;
+  }
+
+  // Spines view: favorites stand face-out at the start of each shelf, then a bookend, then the spines.
+  function shelfHTML(list) {
+    if (state.mode === "covers") return list.map(face).join("");
+    const out = list.filter(b => b.fav), rest = list.filter(b => !b.fav);
+    return out.map(face).join("") + (out.length && rest.length ? '<div class="slot"><i class="bookend"></i></div>' : "") + rest.map(spine).join("");
+  }
+
+  function render() {
+    const shown = books.filter(matches);
+    const groups = new Map();
+    let sorted;
+    if (state.group === "year") {
+      sorted = shown.slice().sort((a, b) => (b.year || 0) - (a.year || 0) || a.title.localeCompare(b.title));
+      sorted.forEach(b => { const k = b.year || "Undated"; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(b); });
+    } else {
+      const keyOf = b => state.group === "author" ? lastName(b.author) : b.title.replace(/^(the|a|an)\s+/i, "");
+      sorted = shown.slice().sort((a, b) => keyOf(a).localeCompare(keyOf(b)) || (a.year || 0) - (b.year || 0));
+      sorted.forEach(b => { let k = norm(keyOf(b)).charAt(0).toUpperCase(); if (!/[A-Z]/.test(k)) k = "#"; if (!groups.has(k)) groups.set(k, []); groups.get(k).push(b); });
+    }
+    const thisYear = new Date().getFullYear();
+    let html = "";
+    for (const [k, list] of groups) {
+      const note = state.group === "year" && k === thisYear ? " · in progress" : "";
+      html += `<section class="case"><div class="plaque"><h2>${esc(k)}</h2><small>${list.length} ${list.length === 1 ? "book" : "books"}${note}</small><i class="bar"></i></div><div class="shelf${state.mode === "covers" ? " covers" : ""}">${shelfHTML(list)}</div></section>`;
+    }
+    $("#library").innerHTML = html || `<div class="empty">No books on the shelf match that.<br><button class="chip" type="button" id="reset">Clear search and filters</button></div>`;
+    $("#count").textContent = shown.length === books.length ? `${books.length} books` : `${shown.length} of ${books.length} books`;
+    observeShelves();
+  }
+
+  // Look up covers for books as their shelf scrolls into view
+  const MONTH = 30 * 864e5;
+  const queue = []; const queued = new Set(); let active = 0;
+  const io = "IntersectionObserver" in window ? new IntersectionObserver(entries => {
+    entries.forEach(en => {
+      if (!en.isIntersecting) return;
+      io.unobserve(en.target);
+      en.target.querySelectorAll("[data-id]").forEach(el => {
+        const b = books[+el.dataset.id]; if (!b) return;
+        const c = COVERS[b.ckey];
+        if (c && (c.src ? c.color !== undefined : Date.now() - c.none < MONTH)) return;
+        if (queued.has(b.ckey)) return;
+        queued.add(b.ckey); queue.push(b);
+      });
+      pump();
+    });
+  }, { rootMargin: "400px 0px" }) : null;
+  function observeShelves() { if (io) document.querySelectorAll(".shelf").forEach(s => io.observe(s)); }
+  function pump() {
+    while (active < 3 && queue.length) {
+      const b = queue.shift(); active++;
+      resolveCover(b).catch(() => {}).finally(() => { active--; pump(); });
+    }
+  }
+  async function resolveCover(b) {
+    let entry = COVERS[b.ckey];
+    if (!entry || !entry.src) {
+      const author = b.author.split(",")[0];
+      let src = null;
+      const r = await fetch(`https://openlibrary.org/search.json?title=${encodeURIComponent(b.main)}&author=${encodeURIComponent(author)}&limit=3&fields=cover_i`);
+      if (r.ok) { const d = (await r.json()).docs?.find(x => x.cover_i); if (d) src = `https://covers.openlibrary.org/b/id/${d.cover_i}-M.jpg`; }
+      if (!src) {
+        const g = await fetch(`https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(`intitle:${b.main} inauthor:${author}`)}&maxResults=3&fields=items(volumeInfo/imageLinks)`);
+        if (g.ok) { const it = (await g.json()).items?.find(x => x.volumeInfo?.imageLinks?.thumbnail); if (it) src = it.volumeInfo.imageLinks.thumbnail.replace(/^http:/, "https:").replace("&edge=curl", ""); }
+      }
+      entry = src ? { src } : { none: Date.now() };
+    }
+    if (entry.src && entry.color === undefined) entry.color = await sampleColor(entry.src);
+    COVERS[b.ckey] = entry; saveCovers();
+    books.filter(x => x.ckey === b.ckey).forEach(x => { applyCover(x); patch(x); });
+  }
+  // The spine takes its color from the left edge of the real cover
+  function sampleColor(src) {
+    return new Promise(res => {
+      const img = new Image(); img.crossOrigin = "anonymous";
+      img.onload = () => {
+        try {
+          const c = document.createElement("canvas"); c.width = 8; c.height = 40;
+          const x = c.getContext("2d", { willReadFrequently: true });
+          x.drawImage(img, 0, 0, Math.max(2, img.naturalWidth * 0.08), img.naturalHeight, 0, 0, 8, 40);
+          const d = x.getImageData(0, 0, 8, 40).data; let r = 0, g = 0, bl = 0, n = 0;
+          for (let i = 0; i < d.length; i += 4) { r += d[i]; g += d[i + 1]; bl += d[i + 2]; n++; }
+          if (img.naturalWidth < 10) return res(null);
+          res("#" + [r, g, bl].map(v => Math.round(v / n).toString(16).padStart(2, "0")).join(""));
+        } catch (e) { res(null); }
+      };
+      img.onerror = () => res(null);
+      img.src = src;
+    });
+  }
+  function patch(b) {
+    document.querySelectorAll(`[data-id="${b.id}"]`).forEach(el => {
+      el.style.setProperty("--c", b.cloth[0]); el.style.setProperty("--t", b.cloth[1]);
+      if (el.classList.contains("face") && b.cover && !el.querySelector("img")) {
+        const img = document.createElement("img"); img.alt = ""; img.decoding = "async"; img.onerror = () => img.remove(); img.src = b.cover;
+        el.querySelector(".gen").after(img);
+      }
+    });
+  }
+
+  function renderStats(live) {
+    const years = {}; const authors = {};
+    books.forEach(b => { if (b.year) years[b.year] = (years[b.year] || 0) + 1; b.author.split(",").forEach(a => { a = a.trim(); if (a) authors[a] = (authors[a] || 0) + 1; }); });
+    const ys = Object.keys(years).map(Number).sort();
+    const best = ys.reduce((m, y) => years[y] > (years[m] || 0) ? y : m, ys[0]);
+    const topA = Object.entries(authors).sort((a, b) => b[1] - a[1])[0];
+    const fic = books.filter(b => b.type === "F").length;
+    $("#stats").innerHTML = `<span><b>${books.length}</b> books read</span><span><b>${ys.length}</b> years on the shelf</span><span>Biggest year <b>${best}</b> (${years[best]})</span><span>Most read <b>${esc(topA[0])}</b> (${topA[1]})</span><span><b>${Math.round(fic / books.length * 100)}%</b> fiction</span>`;
+    $("#source").innerHTML = live ? `<i class="dot live"></i>Live from Google Sheets` : `<i class="dot"></i>Snapshot from ${SNAPSHOT_DATE}`;
+    $("#foot").textContent = live ? "Shelves update when the Google Sheet changes." : "Showing the saved copy of the sheet. The live sheet loads when this page is hosted on krouss.org.";
+  }
+
+  // Book detail
+  const dlg = $("#detail");
+  let coverReq = 0;
+  function open(id) {
+    const b = books[id]; if (!b) return;
+    const others = books.filter(x => x.author === b.author && x.key !== b.key).filter((x, i, a) => a.findIndex(y => y.key === x.key) === i);
+    const tags = [b.life ? '<span class="tag life">Life changing</span>' : "", b.fav && !b.life ? '<span class="tag fav">Favorite</span>' : "", b.readCount > 1 ? `<span class="tag re">Read ${b.readCount} times</span>` : ""].join("");
+    const q = encodeURIComponent(b.main + " " + b.author.split(",")[0]);
+    dlg.innerHTML = `<button class="close" type="button" aria-label="Close" data-close>×</button>
+      <div class="book">
+        <div class="jacket" style="--c:${b.cloth[0]};--t:${b.cloth[1]}"><div><div class="jt">${esc(b.main)}</div><div class="rule"></div></div><div class="ja">${esc(b.author)}</div><img alt="" id="cover"></div>
+        <div class="info">
+          <h3 id="d-title">${esc(b.main)}</h3>
+          ${b.sub ? `<p class="sub">${esc(b.sub)}</p>` : ""}
+          <p class="by">by <button type="button" data-author="${esc(b.author)}">${esc(b.author)}</button></p>
+          ${tags ? `<div class="tags">${tags}</div>` : ""}
+          <dl class="facts">
+            <dt>Read</dt><dd>${b.allYears.map(y => y || "Undated").join(", ")}</dd>
+            <dt>Shelf</dt><dd>${b.type === "F" ? "Fiction" : "Nonfiction"}</dd>
+            <dt id="pub-dt" hidden>Published</dt><dd id="pub-dd" hidden></dd>
+          </dl>
+          ${others.length ? `<div class="more"><h4>Also on the shelf by ${esc(lastName(b.author))}</h4><ul>${others.map(o => `<li><button type="button" data-open="${o.id}">${esc(o.main)}</button><span>${o.year || ""}</span></li>`).join("")}</ul></div>` : ""}
+          <div class="links"><a href="https://openlibrary.org/search?q=${q}" target="_blank" rel="noopener">Open Library</a><a href="https://www.goodreads.com/search?q=${q}" target="_blank" rel="noopener">Goodreads</a><a href="https://bookshop.org/search?keywords=${q}" target="_blank" rel="noopener">Bookshop.org</a></div>
+        </div>
+      </div>`;
+    if (!dlg.open) dlg.showModal();
+    loadCover(b, ++coverReq);
+  }
+  function showJacket(src) {
+    const img = $("#cover"); if (!img) return;
+    img.onload = () => img.naturalWidth > 10 && img.classList.add("ok");
+    img.src = src.replace(/-M\.jpg$/, "-L.jpg");
+  }
+  async function loadCover(b, req) {
+    if (b.cover) showJacket(b.cover);
+    try {
+      const url = `https://openlibrary.org/search.json?title=${encodeURIComponent(b.main)}&author=${encodeURIComponent(b.author.split(",")[0])}&limit=1&fields=cover_i,first_publish_year,number_of_pages_median`;
+      const r = await fetch(url); if (!r.ok) return;
+      const d = (await r.json()).docs?.[0]; if (!d || req !== coverReq) return;
+      if (d.first_publish_year) {
+        $("#pub-dd").textContent = d.first_publish_year + (d.number_of_pages_median ? ` · ${d.number_of_pages_median} pages` : "");
+        $("#pub-dt").hidden = false; $("#pub-dd").hidden = false;
+      }
+      if (d.cover_i && !b.cover) showJacket(`https://covers.openlibrary.org/b/id/${d.cover_i}-L.jpg`);
+    } catch (e) { /* the typeset jacket stays */ }
+  }
+  dlg.addEventListener("click", e => {
+    if (e.target === dlg || e.target.closest("[data-close]")) return dlg.close();
+    const o = e.target.closest("[data-open]"); if (o) return open(+o.dataset.open);
+    const a = e.target.closest("[data-author]");
+    if (a) { dlg.close(); state.q = a.dataset.author.split(",")[0]; $("#q").value = state.q; render(); window.scrollTo({ top: 0 }); }
+  });
+
+  // Controls
+  $("#library").addEventListener("click", e => {
+    const s = e.target.closest(".spine"); if (s) return open(+s.dataset.id);
+    if (e.target.closest("#reset")) { state.q = ""; $("#q").value = ""; state.f.clear(); document.querySelectorAll(".chip[data-f]").forEach(c => c.setAttribute("aria-pressed", "false")); render(); }
+  });
+  $("#q").addEventListener("input", e => { state.q = e.target.value.trim(); render(); });
+  $("#chips").addEventListener("click", e => {
+    const c = e.target.closest(".chip"); if (!c) return;
+    const f = c.dataset.f; const on = !state.f.has(f);
+    on ? state.f.add(f) : state.f.delete(f); c.setAttribute("aria-pressed", String(on)); render();
+  });
+  $("#mode").addEventListener("click", e => {
+    const m = e.target.closest("button"); if (!m || m.dataset.m === state.mode) return;
+    state.mode = m.dataset.m; setModeButtons(); try { localStorage.setItem("shelf-mode", state.mode); } catch (err) {} render();
+  });
+  $("#group").addEventListener("change", e => { state.group = e.target.value; try { localStorage.setItem("shelf-group", state.group); } catch (err) {} render(); });
+  $("#random").addEventListener("click", () => {
+    const pool = books.filter(matches); if (!pool.length) return;
+    const b = pool[Math.floor(Math.random() * pool.length)];
+    const el = document.querySelector(`.spine[data-id="${b.id}"], .face[data-id="${b.id}"]`);
+    if (el) { el.scrollIntoView({ block: "center", behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" }); el.focus({ preventScroll: true }); setTimeout(() => open(b.id), 450); }
+    else open(b.id);
+  });
+
+  // Data: show the saved copy instantly, then swap in the live sheet if it loads
+  const SNAP = JSON.parse($("#snapshot").textContent);
+  books = build(SNAP); renderStats(false); render();
+  fetch("covers.json", { cache: "no-cache" }).then(r => r.ok ? r.json() : null).then(saved => {
+    if (!saved) return;
+    for (const [k, v] of Object.entries(saved)) if (v && (v.src || !COVERS[k] || !COVERS[k].src)) COVERS[k] = v;
+    books.forEach(b => { applyCover(b); patch(b); });
+  }).catch(() => {});
+  fetch(LIVE_URL, { cache: "no-store" }).then(r => r.ok ? r.text() : Promise.reject(r.status)).then(text => {
+    const rows = parseCSV(text).map(r => [(r[0] || "").trim(), (r[1] || "").trim(), parseInt(r[2], 10) || null, (r[3] || "").trim(), (r[4] || "").trim()]).filter(r => r[0] && r[0] !== "Title");
+    if (rows.length < 10) return;
+    books = build(rows); renderStats(true); render();
+  }).catch(() => {});
+})();
+</script>
+
+</body>
+</html>
